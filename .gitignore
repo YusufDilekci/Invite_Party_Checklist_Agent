@@ -1,0 +1,114 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+*.pyo
+*.pyd
+*.so
+build/
+dist/
+wheels/
+*.egg-info/
+*.egg
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.key
+secrets.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Data files (uncomment if you want to ignore data files)
+# *.csv
+# *.json
+# *.pkl
+# *.h5
+# *.hdf5
+
+# Model files and weights
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+models/
+checkpoints/
+weights/
+
+# Vector databases and embeddings
+invites_chroma_db/
+*.db
+*.sqlite
+*.sqlite3
+chroma_db/
+vector_store/
+embeddings/
+
+# Logs and temporary files
+*.log
+logs/
+temp/
+tmp/
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Package manager files
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# AI/ML specific
+wandb/
+mlruns/
+.neptune/
+tensorboard_logs/
+lightning_logs/
+
+# Large files that shouldn't be in git
+*.zip
+*.tar.gz
+*.7z
+*.rar
+
+# Temporary Python files
+*.tmp
+*.temp
