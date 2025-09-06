@@ -48,7 +48,7 @@ def web_search(query: str) -> str:
 
 
 @tool
-def search_party_invites(query: str) -> str:
+def retrieval(query: str) -> str:
     """
     Search for information about party invites and people who might attend.
     Returns relevant information about people, their relationships, and contact details.
@@ -86,4 +86,4 @@ def human_assistance(query: str) -> str:
     human_response = interrupt({"query": query})
     return human_response["data"]
 
-tools = [web_search, search_party_invites, human_assistance] 
+tools = [web_search, retrieval, human_assistance] 
