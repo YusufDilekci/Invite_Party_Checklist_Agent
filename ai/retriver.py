@@ -7,7 +7,7 @@ from llama_index.llms.openai import OpenAI
 import chromadb
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import json
-import nest_asyncio
+import datasets
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,6 +31,26 @@ def get_documents():
 
     return documents
 
+def get_documents():
+    """Load and return documents from the guest dataset."""
+    
+    guest_dataset = datasets.load_dataset("agents-course/unit3-invitees", split="train")
+
+    docs = [
+        Document(
+            page_content="\n".join([
+                f"Name: {guest['name']}",
+                f"Relation: {guest['relation']}",
+                f"Description: {guest['description']}",
+                f"Email: {guest['email']}"
+            ]),
+            metadata={"name": guest["name"]}
+        )
+        for guest in guest_dataset
+    ]
+
+    return docs
+
 
 def initialize_retriever():
     """Initialize and return the retriever for party invites."""
@@ -51,7 +71,6 @@ def initialize_retriever():
         vector_store=vector_store,
     )
 
-    # Only run pipeline if the collection is empty
     if chroma_collection.count() == 0:
         nodes = pipeline.run(documents=docs)
 
@@ -59,16 +78,15 @@ def initialize_retriever():
         vector_store=vector_store, embed_model=embed_model
     )
 
-    # Return just the retriever, not the query engine
     retriever = index.as_retriever(similarity_top_k=5)
     
     return retriever
 
-# Initialize the retriever instead of query engine
+
 retriever = initialize_retriever()
 
 if __name__ == "__main__":
-    # Test the retriever
+
     test_nodes = retriever.retrieve("Who can come to the party?")
     for node in test_nodes:
         print(f"Score: {node.score}")

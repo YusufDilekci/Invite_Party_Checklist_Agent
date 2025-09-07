@@ -11,8 +11,9 @@ from tools import tools
 from prompts import get_system_prompt
 from langgraph.types import Command, interrupt
 from dotenv import load_dotenv
-import json
+import os
 load_dotenv()
+
 
 
 class State(TypedDict):
@@ -20,9 +21,11 @@ class State(TypedDict):
 
 
 checkpointer = InMemorySaver()
-llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
 
+
+llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
 llm_with_tools = llm.bind_tools(tools)
+
 
 def chatbot(state: State):
     messages = state["messages"]
@@ -78,14 +81,14 @@ def print_event_info(event, event_type="Event"):
             elif isinstance(last_message, ToolMessage):
                 print(f"\n⚙️ Tool Response:")
                 print(f"  Tool: {last_message.name}")
-                # Truncate long responses for readability
+
                 content = last_message.content
                 if len(content) > 200:
                     content = content[:200] + "..."
                 print(f"  Content: {content}")
             
             elif hasattr(last_message, 'content') and last_message.content:
-                # Only print AI responses, not human messages
+
                 if last_message.__class__.__name__ == 'AIMessage':
                     print(f"\n🤖 Assistant: {last_message.content}")
 
@@ -141,7 +144,6 @@ def resume_from_interrupt(response_data: str, thread_id: str = "1"):
     
     print(f"\n🔄 Resuming execution with your input...")
     
-
     human_command = Command(resume={"data": response_data})
     
     try:
@@ -224,6 +226,7 @@ def main():
     print("• 📜 View conversation history with 'history'")
     print("• 🔄 Resume interrupted conversations")
     print("• 🆔 Use different thread IDs for separate conversations")
+    print("• 📊 LLM calls are being traced with Langfuse")
     print("\nCommands:")
     print("• 'quit', 'exit', 'q' - Stop the assistant")
     print("• 'history' - Show recent conversation")
@@ -237,7 +240,6 @@ def main():
         try:
             user_input = input(f"\n👤 You (Thread {current_thread}): ").strip()
             
-            # Handle special commands
             if user_input.lower() in ["quit", "exit", "q"]:
                 print("\n👋 Thanks for using Party Planning Assistant! Goodbye!")
                 break
@@ -269,13 +271,11 @@ def main():
                 print("\n💡 Please enter a message or command.")
                 continue
             
-            # Check if we're in an interrupted state
             if check_for_interruption(current_thread):
                 print(f"\n⏸️ This conversation is waiting for human input.")
                 print(f"Use 'resume:your response' to continue, or start a new thread.")
                 continue
             
-            # Process normal user input
             stream_graph_updates(user_input, current_thread)
             
         except KeyboardInterrupt:
