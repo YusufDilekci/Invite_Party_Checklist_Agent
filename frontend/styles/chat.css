@@ -1,0 +1,21 @@
+.chat-message {
+    padding: 1rem;
+    border-radius: 10px;
+    margin: 0.5rem 0;
+}
+
+.user-message {
+    background-color: #E3F2FD;
+    border-left: 4px solid #2196F3;
+}
+
+.assistant-message {
+    background-color: #F3E5F5;
+    border-left: 4px solid #9C27B0;
+}
+
+.tool-message {
+    background-color: #E8F5E8;
+    border-left: 4px solid #4CAF50;
+    font-size: 0.9rem;
+}

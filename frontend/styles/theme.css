@@ -1,0 +1,35 @@
+.main-header {
+    text-align: center;
+    color: #FF6B6B;
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.feature-box {
+    background-color: #F8F9FA;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 4px solid #FF6B6B;
+    margin: 0.5rem 0;
+}
+
+.error-message {
+    background-color: #FFEBEE;
+    border-left: 4px solid #F44336;
+    color: #C62828;
+}
+
+.success-message {
+    background-color: #E8F5E8;
+    border-left: 4px solid #4CAF50;
+    color: #2E7D32;
+}
+
+.interrupt-box {
+    background-color: #FFF3E0;
+    border: 2px solid #FF9800;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+}

@@ -4,10 +4,12 @@ from retriver import retriever
 from langchain.tools import tool
 from langgraph.types import interrupt
 from dotenv import load_dotenv
+from config import MCP_CONFIG
+import asyncio
 load_dotenv()
 
-@tool
-async def get_mcp_tools(config):
+
+def get_mcp_tools(query: str) -> str:
     """
     Get MCP (Model Context Protocol) tools from GitHub server.
     
@@ -17,20 +19,11 @@ async def get_mcp_tools(config):
     Returns:
         List of available MCP tools from the GitHub server
     """
-    user = config["configurable"].get("langgraph_auth_user")
+    client = MultiServerMCPClient(MCP_CONFIG)
+    mcp_tools = asyncio.run(client.get_tools())
 
-    client = MultiServerMCPClient({
-        "github": {
-            "transport": "streamable_http",
-            "url": "https://my-github-mcp-server/mcp",
-            "headers": {
-                "Authorization": f"Bearer {user['github_token']}"
-            }
-        }
-    })
-    mcp_tools = await client.get_tools()
+    return "".join(mcp_tools)
 
-    return mcp_tools
 
 @tool
 def web_search(query: str) -> str:
@@ -86,4 +79,11 @@ def human_assistance(query: str) -> str:
     human_response = interrupt({"query": query})
     return human_response["data"]
 
-tools = [web_search, retrieval, human_assistance] 
+tools = [web_search, retrieval, human_assistance, get_mcp_tools] 
+
+if __name__ == "__main__":
+    # Example usage
+    print(web_search("What's the weather like for a party this weekend?"))
+    print(retrieval("Who should I invite to my birthday party?"))
+    print(human_assistance("Should I hire a DJ or a live band for the party?"))
+    print(get_mcp_tools("List available MCP tools"))

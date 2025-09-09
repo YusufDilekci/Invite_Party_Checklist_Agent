@@ -11,6 +11,7 @@ from tools import tools
 from prompts import get_system_prompt
 from langgraph.types import Command, interrupt
 from dotenv import load_dotenv
+from langgraph.prebuilt import create_react_agent
 import os
 load_dotenv()
 
@@ -24,29 +25,22 @@ checkpointer = InMemorySaver()
 
 
 llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
-llm_with_tools = llm.bind_tools(tools)
 
+max_iterations = 3
+recursion_limit = 2 * max_iterations + 1
+agent = create_react_agent(
+    model=llm,  
+    tools=tools,  
+    prompt=get_system_prompt(),
+    
+)
 
 def chatbot(state: State):
     messages = state["messages"]
-    
-    if not messages or not any(isinstance(msg, SystemMessage) for msg in messages):
-        system_message = SystemMessage(content=get_system_prompt())
-        messages = [system_message] + messages
-    
-    response = llm_with_tools.invoke(messages)
-    
-    return {"messages": [response]}
+    response = agent.invoke({"messages": messages},{"recursion_limit": recursion_limit})
 
-def should_continue(state: State):
-    """Determine the next step based on the last message."""
-    messages = state["messages"]
-    last_message = messages[-1]
+    return response
 
-    if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
-        return "tools"
-
-    return END
 
 graph_builder = StateGraph(State)
 
@@ -56,41 +50,12 @@ graph_builder.add_node("tools", ToolNode(tools=tools))
 graph_builder.add_edge(START, "chatbot")
 graph_builder.add_conditional_edges(
     "chatbot",
-    should_continue,
-    {"tools": "tools", END: END}
+    tools_condition,
 )
 
 graph_builder.add_edge("tools", "chatbot")
 
 graph = graph_builder.compile(checkpointer=checkpointer)
-
-
-def print_event_info(event, event_type="Event"):
-    """Helper function to print event information in a structured way."""
-    if "messages" in event:
-        messages = event["messages"]
-        if messages:
-            last_message = messages[-1]
-            
-            if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
-                print(f"\n🔧 Tool Calls Requested:")
-                for tool_call in last_message.tool_calls:
-                    print(f"  • {tool_call['name']} (ID: {tool_call['id']})")
-                    print(f"    Args: {tool_call['args']}")
-            
-            elif isinstance(last_message, ToolMessage):
-                print(f"\n⚙️ Tool Response:")
-                print(f"  Tool: {last_message.name}")
-
-                content = last_message.content
-                if len(content) > 200:
-                    content = content[:200] + "..."
-                print(f"  Content: {content}")
-            
-            elif hasattr(last_message, 'content') and last_message.content:
-
-                if last_message.__class__.__name__ == 'AIMessage':
-                    print(f"\n🤖 Assistant: {last_message.content}")
 
 
 def stream_graph_updates(user_input: str, thread_id: str = "1"):
@@ -104,32 +69,16 @@ def stream_graph_updates(user_input: str, thread_id: str = "1"):
     config = {"configurable": {"thread_id": thread_id}}
     
     print(f"\n💭 Processing your request...")
-    
-    user_message = HumanMessage(content=user_input)
-    
-    try:
-        # Stream the response
-        events = list(graph.stream(
-            {"messages": [user_message]}, 
-            config=config,
-            stream_mode="values"
-        ))
+
+    events = graph.stream(
+        {"messages": [{"role": "user", "content": user_input}]},
+        config,
+        stream_mode="values",
+    )
+    for event in events:
+        if "messages" in event:
+            event["messages"][-1].pretty_print()
         
-        # Process events and show progress
-        for i, event in enumerate(events):
-            print_event_info(event, f"Step {i+1}")
-        
-        # Get the final state to display the complete conversation
-        final_state = graph.get_state(config)
-        if final_state.values and 'messages' in final_state.values:
-            final_message = final_state.values['messages'][-1]
-            if hasattr(final_message, 'content') and final_message.__class__.__name__ == 'AIMessage':
-                print(f"\n✨ Final Response:")
-                print(f"{final_message.content}")
-        
-    except Exception as e:
-        print(f"\n❌ Error occurred: {str(e)}")
-        print("Please try again or contact support if the issue persists.")
 
 
 def resume_from_interrupt(response_data: str, thread_id: str = "1"):
@@ -147,11 +96,15 @@ def resume_from_interrupt(response_data: str, thread_id: str = "1"):
     human_command = Command(resume={"data": response_data})
     
     try:
-        events = list(graph.stream(human_command, config, stream_mode="values"))
         
-        for i, event in enumerate(events):
-            print_event_info(event, f"Resume Step {i+1}")
-        
+        events = graph.stream(
+            human_command,
+            config,
+            stream_mode="values",
+        )
+        for event in events:
+            if "messages" in event:
+                event["messages"][-1].pretty_print()
 
         final_state = graph.get_state(config)
         if final_state.values and 'messages' in final_state.values:

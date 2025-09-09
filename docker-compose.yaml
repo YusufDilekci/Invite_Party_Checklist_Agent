@@ -1,0 +1,44 @@
+services:
+  ai-service:
+    build:
+      context: ./ai          
+      dockerfile: Dockerfile 
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+    env_file:
+      - .env 
+    volumes:
+      - ./ai:/app            
+    develop:
+      watch:
+        - action: sync
+          path: ./ai
+          target: /app
+          ignore:
+            - __pycache__/
+            - "*.pyc"
+
+  frontend:
+    build:
+      context: ./frontend   
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONPATH=/app
+    env_file:
+      - .env 
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - ai-service
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - __pycache__/
+            - "*.pyc"
