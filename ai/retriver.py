@@ -12,24 +12,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_documents():
-    with open("data.json", "r", encoding="utf-8") as file:
-        data = json.load(file)
-
-    documents = []
-    for item in data:
-        text = f"Name: {item['name']}\nRelation: {item['relation']}\nDescription: {item['description']}\nEmail: {item['email']}"
-        doc = Document(
-            text=text,
-            metadata={
-                "name": item["name"],
-                "relation": item["relation"], 
-                "email": item["email"]
-            }
-        )
-        documents.append(doc)
-
-    return documents
 
 def get_documents():
     """Load and return documents from the guest dataset."""
